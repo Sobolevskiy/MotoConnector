@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-@0+^*53*39c$a7=h#k9+263wqniq#724b8l1$gsb65*hwlxhu*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['https://motoconnector-sobolevskiy.amvera.io']
 
 
 # Application definition
@@ -162,4 +162,5 @@ EMAIL_USE_SSL = True
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# CSRF
 CSRF_TRUSTED_ORIGINS = ['https://motoconnector-sobolevskiy.amvera.io']
