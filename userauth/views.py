@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from userauth.serializers import MyTokenObtainPairSerializer, RegistrationSerializer, UserProfileSerializer
-from service import tasks
+from userauth.utils import send_sync_verification_email
 
 
 class IsVerified(BasePermission):
@@ -67,4 +67,4 @@ def resend_email(request):
     user_id = request.data.get('user_id')
     user = User.objects.get(id=user_id)
     verification = user.user_profile.generate_verification()
-    tasks.send_verification_email.apply_async(args=[user.email, verification.verification_code])
+    send_sync_verification_email(user.email, verification.verification_code)

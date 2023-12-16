@@ -4,7 +4,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from service import tasks
+from userauth.models import UserProfile
+from userauth.utils import send_sync_verification_email
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -57,6 +58,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.save()
 
         verification = user.user_profile.generate_verification()
-        tasks.send_verification_email.apply_async(args=[user.email, verification.verification_code])
+        send_sync_verification_email(user.email, verification.verification_code)
 
         return user
