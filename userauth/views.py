@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.permissions import AllowAny, BasePermission, SAFE_METHODS
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from userauth.serializers import MyTokenObtainPairSerializer, RegistrationSerializer, UserProfileSerializer
@@ -14,9 +14,12 @@ class IsVerified(BasePermission):
         return bool(request.user and request.user.user_profile.verified)
 
 
-class IsOwner(BasePermission):
+class IsOwnerOrReadVerified(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return obj.pk == request.user.pk
+        if request.method in SAFE_METHODS:
+            return bool(request.user and request.user.user_profile.verified)
+        else:
+            return obj.pk == request.user.pk
 
 
 class MyObtainTokenPairView(TokenObtainPairView):
@@ -41,9 +44,9 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response(self._get_response_body(serializer.data), status=status.HTTP_201_CREATED, headers=headers)
 
 
-class UserProfileView(generics.RetrieveAPIView):
+class UserProfileView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
-    permission_classes = (IsOwner,)
+    permission_classes = (IsOwnerOrReadVerified,)
     serializer_class = UserProfileSerializer
 
 

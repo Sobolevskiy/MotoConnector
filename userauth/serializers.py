@@ -17,10 +17,29 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    verified = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ('phone', 'avatar', 'verified')
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(read_only=True, validators=[UniqueValidator(queryset=User.objects.all())])
+    profile = ProfileSerializer(required=True, source='user_profile')
+
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ('username', 'first_name', 'last_name', 'email', 'profile')
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('user_profile')
+        user_profile = instance.user_profile
+        for attr, value in profile_data.items():
+            setattr(user_profile, attr, value)
+        user_profile.save()
+        return super().update(instance, validated_data)
 
 
 class RegistrationSerializer(serializers.ModelSerializer):

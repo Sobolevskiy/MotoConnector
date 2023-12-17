@@ -1,33 +1,26 @@
-import secrets
-from datetime import datetime, timezone
-
 from django.db import models
-from django.dispatch import receiver
-from django.db.models.signals import post_save, pre_save
 from django.contrib.auth.models import User
 
 
-class CommonCatalog(models.Model):
+class MotoType(models.Model):
     name = models.CharField(max_length=64)
-
-    class Meta:
-        abstract = True
-
-
-class MotoType(CommonCatalog):
-    pass
-
-
-class MotoCompany(CommonCatalog):
-    pass
-
-
-class MotoModel(CommonCatalog):
-    pass
 
 
 class Motorcycle(models.Model):
+    LOW_CC = 0
+    MIDDLE_CC = 10
+    MIDDLE_UP_CC = 20
+    UP_CC = 30
+    HIGH_CC = 40
+
+    CC_CHOICES = (
+        (LOW_CC, '0-200'),
+        (MIDDLE_CC, '200-500'),
+        (MIDDLE_UP_CC, '500-700'),
+        (UP_CC, '700-1000'),
+        (HIGH_CC, '>1000'),
+    )
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     moto_type = models.ForeignKey(MotoType, on_delete=models.CASCADE)
-    moto_company = models.ForeignKey(MotoCompany, on_delete=models.CASCADE)
-    moto_model = models.ForeignKey(MotoModel, on_delete=models.CASCADE)
+    cc = models.IntegerField(choices=CC_CHOICES, default=LOW_CC)
