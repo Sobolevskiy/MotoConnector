@@ -36,7 +36,24 @@ class UserRegistrationView(generics.CreateAPIView):
     def _get_response_body(instance_data):
         return {"success": True, "msg": "Verification code sent", "user_id": instance_data.get('pk')}
 
+    @staticmethod
+    def _is_user_already_created(email):
+        user = User.objects.filter(email=email)
+
+        user_id = None
+        exists = user.exists()
+        if exists:
+            user_id = user.first().pk
+
+        return user_id, exists
+
     def create(self, request, *args, **kwargs):
+        if request.data.get('email'):
+            user_id, exists = self._is_user_already_created(request.data['email'])
+            if exists:
+                return Response({"user_id": user_id, "msg": "User with this email already exists"},
+                                status=status.HTTP_403_FORBIDDEN)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
