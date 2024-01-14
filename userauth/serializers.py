@@ -8,6 +8,10 @@ from userauth.models import UserProfile
 from userauth.utils import send_sync_verification_email
 
 
+class TokenValidationError(Exception):
+    pass
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -80,3 +84,26 @@ class RegistrationSerializer(serializers.ModelSerializer):
         send_sync_verification_email(user.email, verification.verification_code)
 
         return user
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        user = User.objects.get(id=attrs['user_id'])
+        if not user.codes.last().is_valid(attrs['token']):
+            raise TokenValidationError('Invalid code')
+        else:
+            user.user_profile.verified = True
+            user.user_profile.save()
+        return attrs
+
+
+class VerifyEmailResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True, initial=True)
+    msg = serializers.CharField(default='User verified', initial='User verified')
+
+
+class ResendEmailSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()

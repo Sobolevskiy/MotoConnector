@@ -4,9 +4,23 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, BasePermission, SAFE_METHODS
 from rest_framework_simplejwt.views import TokenObtainPairView
+from drf_yasg.utils import swagger_auto_schema
 
-from userauth.serializers import MyTokenObtainPairSerializer, RegistrationSerializer, UserProfileSerializer
+from userauth.serializers import (
+    MyTokenObtainPairSerializer,
+    RegistrationSerializer,
+    UserProfileSerializer,
+    VerifyEmailSerializer,
+    VerifyEmailResponseSerializer,
+    TokenValidationError,
+    ResendEmailSerializer,
+)
 from userauth.utils import send_sync_verification_email
+from userauth.openapi import (
+    verify_email_response_schema_dict,
+    resend_email_response_schema_dict,
+    registration_response_schema_dict
+)
 
 
 class IsVerified(BasePermission):
@@ -37,27 +51,36 @@ class UserRegistrationView(generics.CreateAPIView):
         return {"success": True, "msg": "Verification code sent", "user_id": instance_data.get('pk')}
 
     @staticmethod
-    def _is_user_already_created(email):
+    def _is_user_already_exists(email):
+        exists = False
+        msg = {}
         user = User.objects.filter(email=email)
 
-        user_id = None
-        exists = user.exists()
-        if exists:
-            user_id = user.first().pk
+        if user.exists():
+            finded_user = user.first()
+            exists = True
+            msg = {
+                "user_id": finded_user.pk,
+                "verified": finded_user.user_profile.verified,
+                "msg": "User with this email already exists"
+            }
 
-        return user_id, exists
+        return exists, msg
 
     def create(self, request, *args, **kwargs):
         if request.data.get('email'):
-            user_id, exists = self._is_user_already_created(request.data['email'])
+            exists, msg = self._is_user_already_exists(request.data['email'])
             if exists:
-                return Response({"user_id": user_id, "msg": "User with this email already exists"},
-                                status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    msg,
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
+        #TODO: переделать ответ на сериалайзеры
         return Response(self._get_response_body(serializer.data), status=status.HTTP_201_CREATED, headers=headers)
 
 
@@ -67,25 +90,42 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
 
 
+@swagger_auto_schema(method='post',
+                     request_body=VerifyEmailSerializer,
+                     responses=verify_email_response_schema_dict
+                     )
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_email(request):
-    # TODO: добавить сериалайзер
-    user_id = request.data.get('user_id')
-    token = request.data.get('token')
-    user = User.objects.get(id=user_id)
-    if user.codes.last().is_valid(token):
-        user.user_profile.verified = True
-        user.user_profile.save()
-    return Response({'success': True, "msg": "User verified"}, status=status.HTTP_200_OK)
+    msg = None
+    success = True
+    resp_status = status.HTTP_200_OK
+
+    serializer = VerifyEmailSerializer(data=request.data)
+    try:
+        serializer.is_valid(raise_exception=True)
+    except TokenValidationError as e:
+        msg = str(e)
+        resp_status = status.HTTP_403_FORBIDDEN
+        success = False
+    finally:
+        resp_data = {'success': success}
+        if msg:
+            resp_data['msg'] = msg
+        resp = VerifyEmailResponseSerializer(data=resp_data)
+        resp.is_valid()
+
+    return Response(resp.data, status=resp_status)
 
 
+@swagger_auto_schema(method='post', request_body=ResendEmailSerializer, responses=resend_email_response_schema_dict)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def resend_email(request):
-    # TODO: добавить сериалайзер
-    user_id = request.data.get('user_id')
-    user = User.objects.get(id=user_id)
+    serializer = ResendEmailSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    user = User.objects.get(id=serializer.data['user_id'])
     verification = user.user_profile.generate_verification()
     send_sync_verification_email(user.email, verification.verification_code)
     return Response(status=status.HTTP_200_OK)

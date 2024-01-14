@@ -44,9 +44,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'service.apps.ServiceConfig',
     'userauth.apps.UserauthConfig',
+    'motomap.apps.MotomapConfig',
+    'django.contrib.gis',
     # installed
     'phonenumber_field',
     'rest_framework',
+    'rest_framework_gis',
     'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
 ]
@@ -88,8 +91,12 @@ WSGI_APPLICATION = 'MotoConnector.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'data/db.sqlite3',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'HOST': 'localhost',
+        'NAME': 'motoconnector',
+        'PASSWORD': '123',
+        'PORT': 5432,
+        'USER': 'postgres',
     }
 }
 
@@ -183,3 +190,6 @@ SWAGGER_SETTINGS = {
       }
    }
 }
+
+GDAL_LIBRARY_PATH = '/opt/homebrew/opt/gdal/lib/libgdal.dylib'
+GEOS_LIBRARY_PATH = '/opt/homebrew/opt/geos/lib/libgeos_c.dylib'
