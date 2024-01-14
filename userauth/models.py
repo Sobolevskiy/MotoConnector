@@ -10,7 +10,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 class PendingUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='codes')
-    verification_code = models.CharField(max_length=8, blank=True, null=True)
+    verification_code = models.CharField(max_length=128, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def generate_code(self):

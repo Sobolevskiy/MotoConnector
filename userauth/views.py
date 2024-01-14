@@ -88,3 +88,4 @@ def resend_email(request):
     user = User.objects.get(id=user_id)
     verification = user.user_profile.generate_verification()
     send_sync_verification_email(user.email, verification.verification_code)
+    return Response(status=status.HTTP_200_OK)
