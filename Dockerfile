@@ -26,6 +26,9 @@ ENV PATH $PATH:/venv/bin
 
 COPY --from=compile /venv /venv
 
+RUN apt-get update &&\
+    apt-get --assume-yes install binutils libproj-dev gdal-bin
+
 RUN echo ". /venv/bin/activate" >> "$HOME/.bashrc"
 
 COPY --from=compile /app /app

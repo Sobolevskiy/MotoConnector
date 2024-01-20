@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Moto Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="//unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="//unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const copy = "<a href='https://osm.org/copyright'>OpenStreetMap‹/a> contributors";
+        const url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+        const osm = L.tileLayer (url, { attribution: copy });
+        const map = L.map ("map", { layers: [osm], minZoom: 5 });
+
+        async function load_places() {
+            const points_url = `/motomap/places/?in_bbox=${map.getBounds().toBBoxString()}`;
+            const resp = await fetch(points_url);
+            const geojson = await resp.json();
+            return geojson;
+        }
+
+        async function render_places() {
+            const places = await load_places();
+            L.geoJSON(places).bindPopup((layer) => layer.feature.properties.name).addTo(map);
+        }
+
+        map
+            .locate()
+            .on("locationfound", (e) => map.setView(e.latlng, 8))
+            .on("locationerror", (e) => map.setView([0, 0], 5))
+
+        map.on("moveend", render_places)
+    </script>
+</body>
+</html>
+
+<style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+    }
+    #map {
+        height: 100%;
+        width: 100%;
+    }
+</style>

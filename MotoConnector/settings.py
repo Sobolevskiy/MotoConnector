@@ -45,9 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'service.apps.ServiceConfig',
     'userauth.apps.UserauthConfig',
+    'motomap.apps.MotomapConfig',
+    'django.contrib.gis',
     # installed
     'phonenumber_field',
     'rest_framework',
+    'rest_framework_gis',
     'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
@@ -91,8 +94,12 @@ WSGI_APPLICATION = 'MotoConnector.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'data/db.sqlite3',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'HOST': os.environ.get('DB_HOST'),
+        'NAME': os.environ.get('DB_NAME'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'PORT': int(os.environ.get('DB_PORT')),
+        'USER': os.environ.get('DB_USER'),
     }
 }
 

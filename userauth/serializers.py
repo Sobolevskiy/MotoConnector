@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -29,13 +29,27 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ('phone', 'avatar', 'verified')
 
 
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('name',)
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True, validators=[UniqueValidator(queryset=User.objects.all())])
     profile = ProfileSerializer(required=True, source='user_profile')
+    # groups = GroupSerializer(many=True, read_only=True)
+    groups = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name'
+    )
+    is_staff = serializers.BooleanField(read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'profile')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'profile', 'groups', 'is_staff', 'is_superuser')
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('user_profile')
