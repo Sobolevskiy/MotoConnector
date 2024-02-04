@@ -23,6 +23,21 @@ class ChoiceArrayField(ArrayField):
         return super().formfield(**defaults)
 
 
+class PlaceTag(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+    verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name}./.{self.verified}"
+
+
+class Landscape(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Place(models.Model):
     NATURE_TYPE = 100
     HISTORIC_TYPE = 200
@@ -39,6 +54,8 @@ class Place(models.Model):
         models.IntegerField(choices=PLACE_TYPES_CHOICES, default=NATURE_TYPE)
     )
     location = models.PointField()
+    tags = models.ManyToManyField(PlaceTag, related_name="tags", blank=True)
+    landscapes = models.ManyToManyField(Landscape, related_name="landscapes", blank=True)
 
     def __str__(self):
         return self.name

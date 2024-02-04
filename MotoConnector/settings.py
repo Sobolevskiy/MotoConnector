@@ -95,7 +95,7 @@ WSGI_APPLICATION = 'MotoConnector.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'HOST': os.environ.get('DB_HOST', 'host.docker.internal'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
         'NAME': os.environ.get('DB_NAME', 'motoconnector'),
         'PASSWORD': os.environ.get('DB_PASSWORD', '123'),
         'PORT': int(os.environ.get('DB_PORT', 5432)),
