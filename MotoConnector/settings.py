@@ -95,11 +95,11 @@ WSGI_APPLICATION = 'MotoConnector.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'HOST': os.environ.get('DB_HOST'),
-        'NAME': os.environ.get('DB_NAME'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'PORT': int(os.environ.get('DB_PORT')),
-        'USER': os.environ.get('DB_USER'),
+        'HOST': os.environ.get('DB_HOST', 'host.docker.internal'),
+        'NAME': os.environ.get('DB_NAME', 'motoconnector'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '123'),
+        'PORT': int(os.environ.get('DB_PORT', 5432)),
+        'USER': os.environ.get('DB_USER', 'postgres'),
     }
 }
 
@@ -199,9 +199,6 @@ SWAGGER_SETTINGS = {
       }
    }
 }
-
-GDAL_LIBRARY_PATH = '/opt/homebrew/opt/gdal/lib/libgdal.dylib'
-GEOS_LIBRARY_PATH = '/opt/homebrew/opt/geos/lib/libgeos_c.dylib'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
