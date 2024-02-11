@@ -7,11 +7,12 @@ from motomap.models import Place, PlaceTag
 class DictionarySerializer(serializers.Serializer):
     id = serializers.IntegerField(required=True)
     name = serializers.CharField(required=True)
-    model = serializers.SerializerMethodField()
 
-    @staticmethod
-    def get_model(obj):
-        return obj.__class__.__name__.lower()
+
+class PlaceTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlaceTag
+        fields = ('id', 'name')
 
 
 class PointSerializer(gis_serializers.GeoFeatureModelSerializer):
