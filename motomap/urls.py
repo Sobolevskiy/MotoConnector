@@ -1,10 +1,11 @@
 from django.urls import path
 from rest_framework import routers
 
-from motomap.views import MarkersMapView, PointsViewSet, DictionariesViewSet, PlaceTagsViewSet
+from motomap.views import MarkersMapView, PointsViewSet, DictionariesViewSet, PlaceTagsViewSet, PlaceViewSet
 
 router = routers.DefaultRouter()
 router.register(r'places', PointsViewSet, basename='places')
+router.register(r'all_places', PlaceViewSet, basename='all_places')
 
 urlpatterns = [
     path("map/", MarkersMapView.as_view()),

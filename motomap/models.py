@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
 
 
 class _TypedMultipleChoiceField(forms.TypedMultipleChoiceField):
@@ -59,3 +61,13 @@ class Place(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class PlaceImage(models.Model):
+    image = models.ImageField(upload_to='places', null=True, blank=True)
+    place = models.ForeignKey(Place, related_name='images', on_delete=models.CASCADE)
+
+
+@receiver(pre_delete, sender=PlaceImage)
+def place_image_delete(sender, instance, **kwargs):
+    instance.image.delete(False)

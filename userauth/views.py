@@ -25,13 +25,13 @@ from userauth.openapi import (
 
 class IsVerified(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.user_profile.verified)
+        return not request.user.is_anonymous and request.user.user_profile.verified
 
 
-class IsOwnerOrReadVerified(BasePermission):
+class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
-            return bool(request.user and request.user.user_profile.verified)
+            return True
         else:
             return obj.pk == request.user.pk
 
@@ -86,7 +86,7 @@ class UserRegistrationView(generics.CreateAPIView):
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
-    permission_classes = (IsOwnerOrReadVerified,)
+    permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = UserProfileSerializer
 
 

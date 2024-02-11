@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework_gis import filters
 
 from motomap.models import Place, PlaceTag, Landscape
-from motomap.serializers import PointSerializer, DictionarySerializer, PlaceTagSerializer
+from motomap.serializers import PointSerializer, DictionarySerializer, PlaceTagSerializer, PlaceSerializer
 from motomap.filters import PlaceTypeFilter
 
 
@@ -23,6 +23,12 @@ class PointsViewSet(viewsets.ModelViewSet):
     filterset_class = PlaceTypeFilter
     queryset = Place.objects.filter(Q(tags__isnull=True) | Q(tags__verified=True))
     serializer_class = PointSerializer
+
+
+class PlaceViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    queryset = Place.objects.all()
+    serializer_class = PlaceSerializer
 
 
 class PlaceTagsViewSet(generics.ListAPIView):

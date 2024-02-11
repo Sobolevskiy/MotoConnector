@@ -1,11 +1,17 @@
-from django.contrib import admin
 from django.contrib.gis import admin
 
-from motomap.models import Place, PlaceTag, Landscape
+from motomap.models import Place, PlaceTag, Landscape, PlaceImage
+
+
+class PlaceImageInline(admin.StackedInline):
+    model = PlaceImage
+    can_delete = True
+    extra = 1
 
 
 @admin.register(Place)
-class PointAdmin(admin.OSMGeoAdmin):
+class PlaceAdmin(admin.OSMGeoAdmin):
+    inlines = [PlaceImageInline]
     list_display = ('name', 'location')
 
 
