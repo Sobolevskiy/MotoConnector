@@ -1,7 +1,7 @@
 from django.views.generic import TemplateView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets, generics, status, mixins
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -16,19 +16,32 @@ class MarkersMapView(TemplateView):
     template_name = 'map.html'
 
 
-class PointsViewSet(viewsets.ModelViewSet):
+class PointsViewSet(mixins.CreateModelMixin,
+                    mixins.RetrieveModelMixin,
+                    mixins.UpdateModelMixin,
+                    mixins.ListModelMixin,
+                    viewsets.GenericViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     bbox_filter_field = 'location'
     filter_backends = (filters.InBBOXFilter, DjangoFilterBackend)
     filterset_class = PlaceTypeFilter
-    queryset = Place.objects.filter(Q(tags__isnull=True) | Q(tags__verified=True))
-    serializer_class = PointSerializer
-
-
-class PlaceViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Place.objects.all()
     serializer_class = PlaceSerializer
+
+    def _is_list_action(self):
+        return self.action == self.list.__name__
+
+    def get_queryset(self):
+        if self._is_list_action():
+            return self.queryset.filter(Q(tags__isnull=True) | Q(tags__verified=True))
+        else:
+            return super().get_queryset()
+
+    def get_serializer_class(self):
+        if self._is_list_action():
+            return PointSerializer
+        else:
+            return super().get_serializer_class()
 
 
 class PlaceTagsViewSet(generics.ListAPIView):
