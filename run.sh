@@ -1,20 +1,19 @@
 #!/bin/bash
 
 set -ex
-function create_superuser() {
-  DJANGO_SUPERUSER_PASSWORD=root python manage.py createsuperuser \
-      --noinput \
-      --username root \
-      --email "mi8sobolev@mail.ru"
+
+function wait_for_dbs() {
+  ./wait-for-it.sh -s "$DB_HOST:$DB_PORT" --timeout=180
 }
 
 [ -f /venv/bin/activate ] && . /venv/bin/activate
 
 if [[ "$1" == "runserver" ]]; then
-python3 manage.py migrate --noinput
-create_superuser
-python3 manage.py collectstatic --noinput
-python3 manage.py runserver 0.0.0.0:8000
+  wait_for_dbs
+  python3 manage.py migrate --noinput
+  python3 manage.py super_user_creation --username root --password root --email mi8sobolev@mail.ru --preserve  --noinput
+  python3 manage.py collectstatic --noinput
+  python3 manage.py runserver 0.0.0.0:8000
 else
   exec "$@"
 fi
