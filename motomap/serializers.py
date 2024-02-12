@@ -19,9 +19,14 @@ class DictionarySerializer(serializers.Serializer):
 
 
 class PlaceTagSerializer(serializers.ModelSerializer):
+    count = serializers.SerializerMethodField(read_only=True)
+
+    def get_count(self, obj):
+        return Place.objects.filter(tags=obj).count()
+
     class Meta:
         model = PlaceTag
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'count')
 
 
 class PointSerializer(gis_serializers.GeoFeatureModelSerializer):
