@@ -53,26 +53,54 @@ class PointSerializer(gis_serializers.GeoFeatureModelSerializer):
         model = Place
 
 
+class PlaceImageSerializer(serializers.ModelSerializer):
+    height = serializers.SerializerMethodField(read_only=True)
+    width = serializers.SerializerMethodField(read_only=True)
+    def get_height(self, obj):
+        return obj.image.height
+    def get_width(self, obj):
+        return obj.image.width
+
+    class Meta:
+        model = PlaceImage
+        fields = ('id', 'image', 'height', 'width')
+
+
+class FormDataListField(serializers.ListField):
+    def _check_if_integer_form_data(self, data):
+        if isinstance(self.child, serializers.IntegerField):
+            if len(data) >= 1 and isinstance(data[0], str):
+                return len(data[0].split(',')) > 1
+
+    def to_internal_value(self, data):
+        if self._check_if_integer_form_data(data):
+            data = list(map(int, data[0].split(',')))
+        return super().to_internal_value(data)
+
+
 class PlaceSerializer(PointSerializer):
-    images = ImageUrlField(
-        many=True,
-        read_only=True
-    )
+    images = PlaceImageSerializer(many=True, read_only=True)
     upload_images = serializers.ListField(
         child=serializers.ImageField(required=False),
         allow_empty=True,
         required=False,
         write_only=True
     )
+    remove_images = FormDataListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
-        fields = ('id', 'name', 'place_type', 'tags', 'landscapes', 'new_tags', 'images', 'upload_images')
+        fields = ('id', 'name', 'place_type', 'tags', 'landscapes',
+                  'new_tags', 'images', 'upload_images', 'remove_images')
         geo_field = 'location'
         model = Place
 
-    def create(self, validated_data):
-        upload_images = validated_data.pop('upload_images', None)
-        instance = super().create(validated_data)
+    @staticmethod
+    def _bulk_image_create(upload_images, instance):
         if upload_images:
             upload_images_list = []
             for image in upload_images:
@@ -81,4 +109,17 @@ class PlaceSerializer(PointSerializer):
             if upload_images_list:
                 PlaceImage.objects.bulk_create(upload_images_list)
 
+    def create(self, validated_data):
+        upload_images = validated_data.pop('upload_images', None)
+        validated_data.pop('remove_images', None)
+        instance = super().create(validated_data)
+        self._bulk_image_create(upload_images, instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        upload_images = validated_data.pop('upload_images', None)
+        self._bulk_image_create(upload_images, instance)
+        remove_images = validated_data.pop('remove_images', None)
+        if remove_images:
+            PlaceImage.objects.filter(pk__in=remove_images).delete()
         return instance
