@@ -12,7 +12,7 @@ class PlaceImageInline(admin.StackedInline):
 @admin.register(Place)
 class PlaceAdmin(admin.OSMGeoAdmin):
     inlines = [PlaceImageInline]
-    list_display = ('name', 'location')
+    list_display = ('name', 'geometry')
 
 
 @admin.register(PlaceTag)

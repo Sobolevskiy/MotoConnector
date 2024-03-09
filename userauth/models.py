@@ -35,9 +35,14 @@ def generate_verification_code(sender, instance, **kwargs):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_profile')
-    phone = PhoneNumberField(region="RU")
+    phone = PhoneNumberField(region="RU", blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     avatar = models.ImageField(upload_to='profile_images', blank=True)
     verified = models.BooleanField(default=False)
+    tg = models.URLField(blank=True, null=True)
+    vk = models.URLField(blank=True, null=True)
+    instagram = models.URLField(blank=True, null=True)
+    youtube = models.URLField(blank=True, null=True)
 
     def generate_verification(self):
         return PendingUser.objects.create(user=self.user)

@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.gis.db import models
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
@@ -55,9 +56,10 @@ class Place(models.Model):
     place_type = ChoiceArrayField(
         models.IntegerField(choices=PLACE_TYPES_CHOICES, default=NATURE_TYPE)
     )
-    location = models.PointField()
+    geometry = models.PointField()
     tags = models.ManyToManyField(PlaceTag, related_name="tags", blank=True)
     landscapes = models.ManyToManyField(Landscape, related_name="landscapes", blank=True)
+    discoverer = models.ForeignKey(User, related_name="places", on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.name

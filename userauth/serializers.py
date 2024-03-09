@@ -3,6 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from phonenumber_field.serializerfields import PhoneNumberField
 
 from userauth.models import UserProfile
 from userauth.utils import send_sync_verification_email
@@ -22,11 +23,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    verified = serializers.BooleanField(read_only=True)
-
     class Meta:
         model = UserProfile
-        fields = ('phone', 'avatar', 'verified')
+        fields = ('phone', 'avatar', 'description', 'verified', 'tg', 'vk', 'instagram', 'youtube')
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -37,26 +36,28 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True, validators=[UniqueValidator(queryset=User.objects.all())])
-    profile = ProfileSerializer(required=True, source='user_profile')
-    # groups = GroupSerializer(many=True, read_only=True)
+    additions = ProfileSerializer(required=True, source='user_profile')
     groups = serializers.SlugRelatedField(
         many=True,
         read_only=True,
         slug_field='name'
     )
+    verified = serializers.BooleanField(read_only=True, source='user_profile.verified')
     is_staff = serializers.BooleanField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'profile', 'groups', 'is_staff', 'is_superuser')
+        fields = ('id', 'username', 'first_name', 'last_name',
+                  'email', 'additions', 'groups', 'is_staff', 'is_superuser', 'verified')
 
     def update(self, instance, validated_data):
-        profile_data = validated_data.pop('user_profile')
-        user_profile = instance.user_profile
-        for attr, value in profile_data.items():
-            setattr(user_profile, attr, value)
-        user_profile.save()
+        profile_data = validated_data.pop('user_profile', None)
+        if profile_data:
+            user_profile = instance.user_profile
+            for attr, value in profile_data.items():
+                setattr(user_profile, attr, value)
+            user_profile.save()
         return super().update(instance, validated_data)
 
 

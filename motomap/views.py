@@ -21,8 +21,8 @@ class PointsViewSet(mixins.CreateModelMixin,
                     mixins.UpdateModelMixin,
                     mixins.ListModelMixin,
                     viewsets.GenericViewSet):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    bbox_filter_field = 'location'
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
+    bbox_filter_field = 'geometry'
     filter_backends = (filters.InBBOXFilter, DjangoFilterBackend)
     filterset_class = PlaceTypeFilter
     queryset = Place.objects.all()
@@ -46,7 +46,7 @@ class PointsViewSet(mixins.CreateModelMixin,
 
 class PlaceTagsViewSet(generics.ListAPIView):
     serializer_class = PlaceTagSerializer
-    queryset = PlaceTag.objects.all()
+    queryset = PlaceTag.objects.filter(verified=True)
 
 
 class DictionariesViewSet(generics.ListAPIView):
