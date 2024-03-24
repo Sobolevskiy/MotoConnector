@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.db.models import Q, Count
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers

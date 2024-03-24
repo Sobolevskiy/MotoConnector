@@ -1,12 +1,13 @@
+from django.db.models import Q, Count
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from phonenumber_field.serializerfields import PhoneNumberField
 
 from userauth.models import UserProfile
 from userauth.utils import send_sync_verification_email
+from socials.models import Comment
 
 
 class TokenValidationError(Exception):
@@ -23,9 +24,30 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    grades = serializers.SerializerMethodField(read_only=True)
+
+    def get_grades(self, obj):
+        likes = 0
+        dislikes = 0
+        neutrals = 0
+        overall_rating = None
+        qs = (obj
+              .comments.values("object_id")
+              .annotate(likes_count=Count('grade', filter=Q(grade=Comment.LIKE)))
+              .annotate(dislikes_count=Count('grade', filter=Q(grade=Comment.DISLIKE)))
+              .annotate(neutrals_count=Count('grade', filter=Q(grade=Comment.NEUTRAL)))
+              )
+        if qs.exists():
+            likes = qs[0]['likes_count']
+            dislikes = qs[0]['dislikes_count']
+            neutrals = qs[0]['neutrals_count']
+            overall_rating = ((likes * Comment.LIKE + dislikes * Comment.DISLIKE + neutrals * Comment.NEUTRAL)
+                              /
+                              (likes + dislikes + neutrals))
+        return {'likes': likes, 'dislikes': dislikes, 'neutrals': neutrals, 'overall_rating': overall_rating}
     class Meta:
         model = UserProfile
-        fields = ('phone', 'avatar', 'description', 'verified', 'tg', 'vk', 'instagram', 'youtube')
+        fields = ('phone', 'avatar', 'description', 'verified', 'tg', 'vk', 'instagram', 'youtube', 'grades')
 
 
 class GroupSerializer(serializers.ModelSerializer):

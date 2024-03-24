@@ -6,8 +6,8 @@ from django.contrib.auth.models import User
 
 class BinaryGrade(models.Model):
     """ Оценка, которая может быть Лайк/Дизлайк """
-    LIKE = 0
-    DISLIKE = 20
+    LIKE = 20
+    DISLIKE = 0
     GRADE_CHOICES = (
         (LIKE, 'Лайк'),
         (DISLIKE, 'Дизлайк'),
@@ -21,9 +21,9 @@ class BinaryGrade(models.Model):
 
 
 class Comment(models.Model):
-    LIKE = 0
+    LIKE = 20
     NEUTRAL = 10
-    DISLIKE = 20
+    DISLIKE = 0
     GRADE_CHOICES = (
         (LIKE, 'Лайк'),
         (NEUTRAL, 'Нейтрально'),

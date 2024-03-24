@@ -1,7 +1,9 @@
+from django.db.models import Q, Count
 from rest_framework_gis import serializers as gis_serializers
 from rest_framework import serializers
 
 from motomap.models import Place, PlaceTag, PlaceImage
+from socials.models import Comment
 
 
 class ImageUrlField(serializers.RelatedField):
@@ -30,8 +32,30 @@ class PlaceTagSerializer(serializers.ModelSerializer):
 
 
 class PointSerializer(gis_serializers.GeoFeatureModelSerializer):
+    grades = serializers.SerializerMethodField(read_only=True)
+
+    def get_grades(self, obj):
+        likes = 0
+        dislikes = 0
+        neutrals = 0
+        overall_rating = None
+        qs = (obj
+              .comments.values("object_id")
+              .annotate(likes_count=Count('grade', filter=Q(grade=Comment.LIKE)))
+              .annotate(dislikes_count=Count('grade', filter=Q(grade=Comment.DISLIKE)))
+              .annotate(neutrals_count=Count('grade', filter=Q(grade=Comment.NEUTRAL)))
+              )
+        if qs.exists():
+            likes = qs[0]['likes_count']
+            dislikes = qs[0]['dislikes_count']
+            neutrals = qs[0]['neutrals_count']
+            overall_rating = ((likes * Comment.LIKE + dislikes * Comment.DISLIKE + neutrals * Comment.NEUTRAL)
+                              /
+                              (likes + dislikes + neutrals))
+        return {'likes': likes, 'dislikes': dislikes, 'neutrals': neutrals, 'overall_rating': overall_rating}
+
     class Meta:
-        fields = ('id', 'name', 'place_type', 'tags', 'landscapes')
+        fields = ('id', 'name', 'place_type', 'tags', 'landscapes', 'grades')
         geo_field = 'geometry'
         model = Place
 
