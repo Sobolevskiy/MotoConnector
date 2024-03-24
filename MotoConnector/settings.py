@@ -43,9 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # apps
     'service.apps.ServiceConfig',
     'userauth.apps.UserauthConfig',
     'motomap.apps.MotomapConfig',
+    'socials.apps.SocialsConfig',
     'django.contrib.gis',
     # installed
     'phonenumber_field',

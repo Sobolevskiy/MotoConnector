@@ -5,6 +5,8 @@ from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 
+from socials.models import Commentable
+
 
 class _TypedMultipleChoiceField(forms.TypedMultipleChoiceField):
     def __init__(self, *args, **kwargs):
@@ -41,7 +43,7 @@ class Landscape(models.Model):
         return self.name
 
 
-class Place(models.Model):
+class Place(Commentable, models.Model):
     NATURE_TYPE = 100
     HISTORIC_TYPE = 200
     MAN_MADE_TYPE = 300
@@ -61,6 +63,9 @@ class Place(models.Model):
     landscapes = models.ManyToManyField(Landscape, related_name="landscapes", blank=True)
     discoverer = models.ForeignKey(User, related_name="places", on_delete=models.CASCADE, blank=True, null=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.name
 
@@ -68,6 +73,8 @@ class Place(models.Model):
 class PlaceImage(models.Model):
     image = models.ImageField(upload_to='places', null=True, blank=True)
     place = models.ForeignKey(Place, related_name='images', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 @receiver(pre_delete, sender=PlaceImage)

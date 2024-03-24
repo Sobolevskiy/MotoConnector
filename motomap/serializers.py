@@ -97,6 +97,10 @@ class PlaceSerializer(serializers.ModelSerializer):
                 found_tag, _ = PlaceTag.objects.get_or_create(name=tag)
                 new_tags_list.append(found_tag)
             validated_data['tags'] += new_tags_list
+
+        # Юзер, который создает место - становится его первооткрывателем
+        if self.context.get('request'):
+            validated_data['user'] = self.context['request'].user
         instance = super().create(validated_data)
         self._bulk_image_create(upload_images, instance)
         return instance

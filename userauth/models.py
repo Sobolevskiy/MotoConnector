@@ -7,6 +7,8 @@ from django.db.models.signals import post_save, pre_save
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 
+from socials.models import Commentable
+
 
 class PendingUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='codes')
@@ -33,7 +35,7 @@ def generate_verification_code(sender, instance, **kwargs):
     instance.generate_code()
 
 
-class UserProfile(models.Model):
+class UserProfile(Commentable, models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_profile')
     phone = PhoneNumberField(region="RU", blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -43,6 +45,9 @@ class UserProfile(models.Model):
     vk = models.URLField(blank=True, null=True)
     instagram = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def generate_verification(self):
         return PendingUser.objects.create(user=self.user)

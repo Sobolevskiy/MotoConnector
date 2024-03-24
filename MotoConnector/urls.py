@@ -53,5 +53,6 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('user/', include('userauth.urls')),
     path('motomap/', include('motomap.urls')),
+    path('socials/', include('socials.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -86,7 +86,7 @@ class UserRegistrationView(generics.CreateAPIView):
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
-    # permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = UserProfileSerializer
 
 
